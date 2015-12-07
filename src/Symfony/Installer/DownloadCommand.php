@@ -483,4 +483,41 @@ abstract class DownloadCommand extends Command
             throw new AbortException();
         });
     }
+
+    /**
+     * Checks the latest version of the symfony installer and compares it against the actual version.
+     * Based on the installerIsUpdated function from SelfUpdateCommand class.
+     *
+     * @return bool
+     */
+    protected function isInstallerUpdated()
+    {
+        $isUpdated = false;
+        $localVersion = $this->getApplication()->getVersion();
+
+        if (false === $remoteVersion = @file_get_contents('http://get.symfony.com/symfony.version')) {
+            throw new \RuntimeException('The version of the Symfony Installer couldn\'t be determined from the server.');
+        }
+
+        if (version_compare($localVersion, $remoteVersion, '>=')) {
+            $isUpdated = true;
+        }
+
+        return $isUpdated;
+    }
+
+    /**
+     * Check if the installer is updated and prints out a message.
+     *
+     * @return $this
+     *
+     */
+    protected function checkInstallerState()
+    {
+        if( !$this->isInstallerUpdated() ) {
+            $this->output->writeln( '<comment>You are not running the latest version of the Symfony Installer, run `symfony self-update` to update.</comment>' );
+        }
+
+        return $this;
+    }
 }
